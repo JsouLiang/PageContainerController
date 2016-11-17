@@ -33,7 +33,7 @@
 
 NS_INLINE CGRect visibleRectWithOffset(CGFloat offset, CGFloat width, CGFloat height, CGFloat maxLength) {
     CGFloat originalX = offset - width;
-    originalX = originalX > 0 ? : 0;
+    originalX = originalX > 0 ? originalX : 0;
     CGFloat rectWidth = VisibleCount * width;
     rectWidth = originalX + rectWidth <= maxLength ? : originalX + (maxLength - offset);
     return CGRectMake(originalX, 0, rectWidth, height);
@@ -41,10 +41,11 @@ NS_INLINE CGRect visibleRectWithOffset(CGFloat offset, CGFloat width, CGFloat he
 
 NS_INLINE NSRange visibleRangeWithOffset(CGFloat offset, CGFloat width, NSInteger maxIndex) {
     NSInteger startIndex = floor(offset / width) - 1;
-    startIndex = startIndex >= 0 ? : 0;
+    startIndex = startIndex >= 0 ? startIndex : 0;
+    
     NSInteger len = VisibleCount;
-    len = startIndex + len < maxIndex ? : maxIndex - startIndex;
-    return NSMakeRange(startIndex, VisibleCount);
+    len = startIndex + len < maxIndex ? len : maxIndex - startIndex;
+    return NSMakeRange(startIndex, len);
 }
 
 @implementation XLPageContainerController
@@ -151,10 +152,12 @@ NS_INLINE NSRange visibleRangeWithOffset(CGFloat offset, CGFloat width, NSIntege
 #pragma mark - ScrollViewDelegate
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     [self layoutContentView];
+    
     CGRect visibleRect = visibleRectWithOffset(scrollView.contentOffset.x,
                                                CGRectGetWidth(scrollView.bounds),
                                                CGRectGetHeight(scrollView.bounds),
                                                _countOfControllers * CGRectGetWidth(scrollView.bounds));
+    
     NSMutableDictionary *tempDic = [_visibleControllerInfo mutableCopy];
     [tempDic enumerateKeysAndObjectsUsingBlock:^(NSString *indexKey, UIViewController *viewController, BOOL * _Nonnull stop) {
         if (!CGRectIntersectsRect(viewController.view.frame, visibleRect)) {
