@@ -35,7 +35,7 @@ NS_INLINE CGRect visibleRectWithOffset(CGFloat offset, CGFloat width, CGFloat he
     CGFloat originalX = offset - width;
     originalX = originalX > 0 ? originalX : 0;
     CGFloat rectWidth = VisibleCount * width;
-    rectWidth = originalX + rectWidth <= maxLength ? : originalX + (maxLength - offset);
+    rectWidth = originalX + rectWidth <= maxLength ? originalX + rectWidth : originalX + (maxLength - offset);
     return CGRectMake(originalX, 0, rectWidth, height);
 }
 
@@ -103,6 +103,7 @@ NS_INLINE NSRange visibleRangeWithOffset(CGFloat offset, CGFloat width, NSIntege
         UIViewController *viewController = [_dataSource pageContainerViewController:self atIndex:index];
         _registerViewControllerInfo[indexKey] = viewController;
         viewController.view.frame = CGRectMake(index * containerViewWidth, 0, containerViewWidth , containerViewHeight);
+        _visibleControllerInfo[indexKey] = viewController;
         [self addSubViewController:viewController];
     }
 }
@@ -120,6 +121,7 @@ NS_INLINE NSRange visibleRangeWithOffset(CGFloat offset, CGFloat width, NSIntege
     _registerViewControllerInfo = [NSMutableDictionary dictionary];
     _currentControllerIndex = 0;
     _visibleControllers = [NSMutableArray arrayWithCapacity:_countOfControllers];
+    _visibleControllerInfo = [NSMutableDictionary dictionary];
 }
 
 
@@ -163,6 +165,11 @@ NS_INLINE NSRange visibleRangeWithOffset(CGFloat offset, CGFloat width, NSIntege
         if (!CGRectIntersectsRect(viewController.view.frame, visibleRect)) {
             [_visibleControllerInfo removeObjectForKey:indexKey];
             NSMutableArray *caches = _viewControllerCachePool[viewController.reuseIdentifier];
+            
+            [viewController willMoveToParentViewController:nil];
+            [viewController.view removeFromSuperview];
+            [viewController removeFromParentViewController];
+            
             if (!caches) {
                 caches = [NSMutableArray array];
             }
